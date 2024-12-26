@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>给最爱的你</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: "Microsoft YaHei", sans-serif;
+            overflow: hidden;
+            cursor: pointer; /* 添加手型光标 */
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            animation: shooting 3s linear infinite;
+        }
+
+        @keyframes shooting {
+            0% {
+                transform: translateX(0) translateY(0) rotate(-45deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(1000px) translateY(1000px) rotate(-45deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            position: relative;
+            width: 800px;
+            height: 700px;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            color: white;
+            text-align: center;
+            padding-bottom: 40px;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide img {
+            max-width: 100%;
+            max-height: 80%;
+            width: auto;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .text {
+            font-size: 24px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            max-width: 80%;
+            line-height: 1.6;
+            animation: textFloat 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes textFloat {
+            from {
+                transform: translateY(0);
+            }
+
+            to {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* 添加提示文本样式 */
+        .click-hint {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 20px;
+            z-index: 1000;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="click-hint">点击任意位置播放音乐</div>
+    <canvas id="canvas"></canvas>
+    <div class="stars"></div>
+    <audio id="bgMusic1" src="music/I_love_you.mp3" type="audio/mp3" loop></audio>
+    <script>
+        // 添加点击事件监听器
+        document.addEventListener('click', function() {
+            const music = document.getElementById('bgMusic1');
+            const hint = document.querySelector('.click-hint');
+            
+            music.play().then(() => {
+                // 音乐开始播放后，移除提示
+                hint.style.display = 'none';
+                // 将音乐播放状态存储到 sessionStorage
+                sessionStorage.setItem('musicPlaying', 'true');
+            }).catch(function(error) {
+                console.log("播放失败: ", error);
+            });
+        }, { once: true });
+
+        // 页面加载时检查是否需要继续播放音乐
+        window.onload = function() {
+            if(sessionStorage.getItem('musicPlaying') === 'true') {
+                const music = document.getElementById('bgMusic1');
+                music.play();
+                document.querySelector('.click-hint').style.display = 'none';
+            }
+        };
+
+            // 创建流星
+            const starsContainer = document.querySelector('.stars');
+            function createStar() {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * window.innerWidth + 'px';
+                star.style.top = Math.random() * window.innerHeight + 'px';
+                starsContainer.appendChild(star);
+
+                // 动画结束后移除流星
+                star.addEventListener('animationend', () => {
+                    star.remove();
+                });
+            }
+
+            // 每隔一段时间创建新的流星
+            setInterval(createStar, 300);
+
+            // 星空背景
+            var canvas = document.getElementById('canvas'),
+                ctx = canvas.getContext('2d'),
+                w = canvas.width = window.innerWidth,
+                h = canvas.height = window.innerHeight,
+                hue = 217,
+                stars = [],
+                count = 0,
+                maxStars = 1400;
+
+            var canvas2 = document.createElement('canvas'),
+                ctx2 = canvas2.getContext('2d');
+            canvas2.width = 100;
+            canvas2.height = 100;
+            var half = canvas2.width / 2,
+                gradient2 = ctx2.createRadialGradient(half, half, 0, half, half, half);
+            gradient2.addColorStop(0.025, '#fff');
+            gradient2.addColorStop(0.1, 'hsl(' + hue + ', 61%, 33%)');
+            gradient2.addColorStop(0.25, 'hsl(' + hue + ', 64%, 6%)');
+            gradient2.addColorStop(1, 'transparent');
+
+            ctx2.fillStyle = gradient2;
+            ctx2.beginPath();
+            ctx2.arc(half, half, half, 0, Math.PI * 2);
+            ctx2.fill();
+
+            function random(min, max) {
+                if (arguments.length < 2) {
+                    max = min;
+                    min = 0;
+                }
+                if (min > max) {
+                    var hold = max;
+                    max = min;
+                    min = hold;
+                }
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            function maxOrbit(x, y) {
+                var max = Math.max(x, y),
+                    diameter = Math.round(Math.sqrt(max * max + max * max));
+                return diameter / 2;
+            }
+
+            var Star = function () {
+                this.orbitRadius = random(maxOrbit(w, h));
+                this.radius = random(60, this.orbitRadius) / 12;
+                this.orbitX = w / 2;
+                this.orbitY = h / 2;
+                this.timePassed = random(0, maxStars);
+                this.speed = random(this.orbitRadius) / 900000;
+                this.alpha = random(2, 10) / 10;
+
+                count++;
+                stars[count] = this;
+            }
+
+            Star.prototype.draw = function () {
+                var x = Math.sin(this.timePassed) * this.orbitRadius + this.orbitX,
+                    y = Math.cos(this.timePassed) * this.orbitRadius + this.orbitY,
+                    twinkle = random(10);
+
+                if (twinkle === 1 && this.alpha > 0) {
+                    this.alpha -= 0.05;
+                } else if (twinkle === 2 && this.alpha < 1) {
+                    this.alpha += 0.05;
+                }
+
+                ctx.globalAlpha = this.alpha;
+                ctx.drawImage(canvas2, x - this.radius / 2, y - this.radius / 2, this.radius, this.radius);
+                this.timePassed += this.speed;
+            }
+
+            for (var i = 0; i < maxStars; i++) {
+                new Star();
+            }
+
+            function animation() {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.globalAlpha = 0.8;
+                ctx.fillStyle = 'hsla(' + hue + ', 64%, 6%, 1)';
+                ctx.fillRect(0, 0, w, h)
+
+                ctx.globalCompositeOperation = 'lighter';
+                for (var i = 1, l = stars.length; i < l; i++) {
+                    stars[i].draw();
+                }
+
+                window.requestAnimationFrame(animation);
+            }
+
+            animation();
+    </script>
+    <div class="container">
+        <div class="slide active">
+            <img src="./story_img/5331735127351_.pic.jpg">
+            <div class="text">还记得我们相遇的那一天，命运让我们相识相知</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/image2.png">
+            <div class="text">在河边第一次牵起你的手，从此再也不放开</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/5291735127311_.pic.jpg">
+            <div class="text">你坐在我的电动车后座，我们风驰电掣，看过黄昏与夜晚</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/5281735127310_.pic.jpg">
+            <div class="text">宝宝，我想和你一起去感受世界一切的美好</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/image.png">
+            <div class="text">异地的时候每天都想宝宝，每一次见你的路上，空气都是甜的</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/5311735127314_.pic.jpg">
+            <div class="text">三月的迪士尼，我们是Judy和Nick</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/5261735127307_.pic.jpg">
+            <div class="text">牵着你的手在迪士尼的夜晚狂奔，去看最中心的烟火表演</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/image5.png">
+            <div class="text">密室逃脱的房间，我们第一次拜堂成亲</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/image6.png">
+            <div class="text">美好的秋天，宝宝，我们终于结束异地啦</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/image7.png">
+            <div class="text">我们一起迎接了属于我们的第一个下雪的冬天</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/image8.png">
+            <div class="text">后来，我们终于结婚啦！</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/5271735127308_.pic.jpg">
+            <div class="text">我们开始有了更多充满爱和惊喜的每一天</div>
+        </div>
+        <div class="slide">
+            <img src="./story_img/5321735127316_.pic.jpg">
+            <div class="text">从现在到未来，牵着你的手不放开，我永远爱你！！</div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        let slideCount = 0;
+        const totalSlides = slides.length;
+
+        function nextSlide() {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+            slideCount++;
+
+            if (slideCount >= totalSlides) {
+                setTimeout(() => {
+                    // 在跳转前保存当前音乐播放状态
+                    const music = document.getElementById('bgMusic1');
+                    if(!music.paused) {
+                        sessionStorage.setItem('musicPlaying', 'true');
+                    }
+                    window.location.href = 'love3.html';
+                }, 500); // 等待8秒后跳转，让最后一张图片显示完
+            }
+        }
+
+        setInterval(nextSlide, 8000);
+    </script>
+</body>
+
+</html>
